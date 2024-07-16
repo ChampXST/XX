@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/model/profile.dart';
+import 'package:flutter_application_2/screen/home.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -76,19 +78,52 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 "ลงทะเบียน",
                                 style: TextStyle(fontSize: 20),
                               ),
-                              onPressed: () async {    //สร้างแอคเค้าก่อนค่อยเคลียแบบฟอรม
+                              onPressed: () async {
+                                //สร้างแอคเค้าก่อนค่อยเคลียแบบฟอรม
                                 if (formKey.currentState!.validate()) {
                                   formKey.currentState?.save();
-                                   //กดลงทะเบียนข้อมูลก็ไปทำงานที่ ไฟเยอร์เบรด ให้าร้างบัญชีผู้ใช้
-                                      
-                                  formKey.currentState?.reset();
+                                  //กดลงทะเบียนข้อมูลก็ไปทำงานที่ ไฟเยอร์เบรด ให้าร้างบัญชีผู้ใช้
+
                                   try {
-                                   await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                                        email: profile.email,              
-                                         password: profile.password
-                                         );
-                                  }on FirebaseAuthException catch(e){          //catch  ถ้ามีข้อผิดพลาด ให้ print
-                                      print(e.message);
+                                    await FirebaseAuth.instance
+                                        .createUserWithEmailAndPassword(
+                                            email: profile.email,
+                                            password: profile.password)
+                                        .then((value) {
+                                      formKey.currentState?.reset();
+                                      Fluttertoast.showToast(
+                                          msg: "สร้างบัญชีสำเร็จ",
+                                          gravity: ToastGravity.CENTER);
+                                      Navigator.pushReplacement(context,
+                                      MaterialPageRoute(builder: (context) {
+                                        return Homescreen();
+                                      }));
+                                    });
+                                    // formKey.currentState?.reset();
+                                    // Fluttertoast.showToast(
+                                    //     msg: "สร้างบัญชีสำเร็จ",
+                                    //     gravity: ToastGravity.CENTER);
+                                    // Navigator.pushReplacement(context,
+                                    //     MaterialPageRoute(builder: (context) {
+                                    //   return Homescreen();
+                                    // }));
+                                  } on FirebaseAuthException catch (e) {
+                                    //catch  ถ้ามีข้อผิดพลาด ให้ print
+                                    // print(e.message);
+                                    print(e.code);
+                                    String message = '';
+
+                                    if (e.code == 'email-already-in-use') {
+                                      message =
+                                          "มีเมลนี้ในระบบแล้วโปรดใช้อีเมลอื่น";
+                                    } else if (e.code == 'weak-password') {
+                                      message = "รหัสผ่านต้องมี6ตัวอักษรขึ้นไป";
+                                    } else {
+                                      message = message;
+                                    }
+                                    Fluttertoast.showToast(
+                                        msg: message,
+                                        gravity: ToastGravity.CENTER);
                                   }
                                 }
                               },
@@ -109,4 +144,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
         });
   }
+
+  String newMethod(String message) => message;
 }
